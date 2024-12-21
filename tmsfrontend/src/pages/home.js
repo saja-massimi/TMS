@@ -3,12 +3,14 @@ import axios from '../api/axiosInstance';
 import Navbar from "../components/navbar";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 function TaskList() {
     const [tasks, setTasks] = useState([]);
     const [statusFilter, setStatusFilter] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     const fetchTasks = async () => {
         setIsLoading(true);
@@ -20,6 +22,7 @@ function TaskList() {
                 },
             });
             setTasks(response.data);
+            console.log(response.data)
         } catch (error) {
             console.error('Error fetching tasks:', error);
             toast.error('Failed to fetch tasks. Please try again.');
@@ -45,6 +48,34 @@ function TaskList() {
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
 
+    const handleDelete = async (e, id) => {
+        e.preventDefault();
+
+        try {
+            const token = sessionStorage.getItem("authToken");
+            if (token) {
+                await axios.delete(`/tasks/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
+                });
+            }
+
+            const newTasks = tasks.filter((task) => task.id !== id);
+            setTasks(newTasks);
+            toast.success('Task deleted successfully');
+        } catch (error) {
+            console.error("Delete task failed:", error.response?.data || error.message);
+            toast.error('Failed to delete task');
+        }
+    };
+
+    const handleEdit = (e, id) => {
+        e.preventDefault();
+        navigate(`/editTask/${id}`);
+    };
+
     return (
         <>
             <Navbar />
@@ -64,7 +95,6 @@ function TaskList() {
                         <option value="completed">Completed</option>
                     </select>
 
-                    {/* Sort by Due Date */}
                     <select
                         className="form-control w-25"
                         onChange={(e) => setSortOrder(e.target.value)}
@@ -86,12 +116,13 @@ function TaskList() {
                                 <th>Description</th>
                                 <th>Status</th>
                                 <th>Due Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {sortedTasks.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4">No tasks found</td>
+                                    <td colSpan="6">No tasks found</td>
                                 </tr>
                             ) : (
                                 sortedTasks.map((task, index) => (
@@ -100,7 +131,21 @@ function TaskList() {
                                         <td>{task.title}</td>
                                         <td>{task.description}</td>
                                         <td>{task.status}</td>
-                                        <td>{new Date(task.dueDate).toLocaleDateString()}</td>
+                                        <td>{task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-primary mx-2"
+                                                onClick={(e) => handleEdit(e, task.id)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger"
+                                                onClick={(e) => handleDelete(e, task.id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             )}

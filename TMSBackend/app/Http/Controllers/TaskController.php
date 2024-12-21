@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -47,6 +48,9 @@ class TaskController extends Controller
             'status' => 'in:pending,in progress,completed',
             'due_date' => 'nullable|date',
         ]);
+        if (!$request->has('due_date') || !$request->due_date) {
+            $request->merge(['due_date' => now()]);
+        }
 
         $task->update($request->all());
         return response()->json($task);

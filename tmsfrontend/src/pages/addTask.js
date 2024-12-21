@@ -12,7 +12,7 @@ function AddTask() {
             title: "",
             description: "",
             status: "",
-            dueDate: new Date(),
+            due_date: new Date(),
             userId: sessionStorage.getItem("user_id"),
         },
         validationSchema: Yup.object({
@@ -23,7 +23,7 @@ function AddTask() {
             status: Yup.string()
                 .oneOf(["pending", "in progress", "completed"], "Invalid status")
                 .required("Status is required"),
-            dueDate: Yup.date().required("Due date is required"),
+            due_date: Yup.date().required("Due date is required"),
         }),
         onSubmit: async (values, { resetForm }) => {
             try {
@@ -120,21 +120,21 @@ function AddTask() {
                     </div>
 
                     <div className="mb-3">
-                        <label htmlFor="dueDate" className="form-label">
+                        <label htmlFor="due_date" className="form-label">
                             Due Date
                         </label>
                         <input
                             type="date"
-                            className={`form-control ${formik.touched.dueDate && formik.errors.dueDate ? "is-invalid" : ""
+                            className={`form-control ${formik.touched.due_date && formik.errors.due_date ? "is-invalid" : ""
                                 }`}
-                            id="dueDate"
-                            name="dueDate"
-                            value={formik.values.dueDate}
+                            id="due_date"
+                            name="due_date"
+                            value={formik.values.due_date}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                         />
-                        {formik.touched.dueDate && formik.errors.dueDate && (
-                            <div className="invalid-feedback">{formik.errors.dueDate}</div>
+                        {formik.touched.due_date && formik.errors.due_date && (
+                            <div className="invalid-feedback">{formik.errors.due_date}</div>
                         )}
                     </div>
 
