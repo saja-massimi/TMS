@@ -8,6 +8,8 @@ import Home from './pages/home';
 import Auth from './pages/auth';
 import NotFound from './pages/notFound';
 import UnAuthorized from './pages/unauthorized';
+import AddtAsk from './pages/addTask';
+import EditTask from './pages/editTask';
 
 function App() {
   return (
@@ -23,6 +25,9 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/unauthorized" element={<UnAuthorized />} />
+          <Route path='/addTask' element={<AddtAsk />} />
+
+          <Route path="/editTask/:id" element={<EditTask />} />
 
 
         </Routes>

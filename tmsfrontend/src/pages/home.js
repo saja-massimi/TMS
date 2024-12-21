@@ -1,172 +1,115 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "../api/axiosInstance";
+import React, { useState, useEffect } from 'react';
+import axios from '../api/axiosInstance';
+import Navbar from "../components/navbar";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-function Home() {
-    const isLoggedIn = !!sessionStorage.getItem("authToken");
-    const navigate = useNavigate();
+function TaskList() {
     const [tasks, setTasks] = useState([]);
+    const [statusFilter, setStatusFilter] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const fetchTasks = async () => {
+        setIsLoading(true);
+        try {
+            const token = sessionStorage.getItem('authToken');
+            const response = await axios.get('/tasks', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setTasks(response.data);
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+            toast.error('Failed to fetch tasks. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            navigate("/");
-            return;
-        }
-
-        const fetchTasks = async () => {
-            try {
-                const token = sessionStorage.getItem("authToken");
-                if (token) {
-                    const response = await axios.get("/tasks", {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                        withCredentials: true,
-                    });
-
-                    setTasks(response.data);
-                }
-            } catch (error) {
-                console.error("Fetch tasks failed:", error.response?.data || error.message);
-            }
-        };
-
         fetchTasks();
-    }, [isLoggedIn, navigate]);
+    }, []);
 
-    const handleLogout = async () => {
-        try {
-            const token = sessionStorage.getItem("authToken");
-            if (token) {
-                await axios.post(
-                    "/logout",
-                    {},
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                        withCredentials: true,
-                    }
-                );
-            }
-
-            sessionStorage.removeItem("authToken");
-            sessionStorage.removeItem("user_id");
-
-            navigate("/");
-        } catch (error) {
-            console.error("Logout failed:", error.response?.data || error.message);
+    const filteredTasks = tasks.filter(task => {
+        if (statusFilter) {
+            return task.status === statusFilter;
         }
-    };
+        return true;
+    });
 
-    const handleDelete = async (e, id) => {
-        e.preventDefault();
-
-        try {
-            const token = sessionStorage.getItem("authToken");
-            if (token) {
-                await axios.delete(`/tasks/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    withCredentials: true,
-                });
-            }
-
-            const newTasks = tasks.filter((task) => task.id !== id);
-            setTasks(newTasks);
-        } catch (error) {
-            console.error("Delete task failed:", error.response?.data || error.message);
-        }
-    };
+    const sortedTasks = [...filteredTasks].sort((a, b) => {
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
     return (
         <>
-            <nav className="navbar navbar-expand-lg bg-body-tertiary">
-                <div className="container-fluid">
-                    <a className="navbar-brand" href="#">
-                        Navbar
-                    </a>
-                    <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#navbarNav"
-                        aria-controls="navbarNav"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation"
+            <Navbar />
+
+            <div className="container border shadow p-3 mx-auto mt-4">
+                <ToastContainer />
+                <h1 className="text-center">Task List</h1>
+                <div className="d-flex justify-content-between mb-3">
+                    <select
+                        className="form-control w-25"
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        value={statusFilter}
                     >
-                        <span className="navbar-toggler-icon" />
-                    </button>
-                    <div className="collapse navbar-collapse" id="navbarNav">
-                        <ul className="navbar-nav">
-                            <li className="nav-item">
-                                <a className="nav-link active" aria-current="page" href="#">
-                                    Home
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link" href="#">
-                                    Add Task
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link" href="#" onClick={handleLogout}>
-                                    Logout
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                        <option value="">Filter by Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+
+                    {/* Sort by Due Date */}
+                    <select
+                        className="form-control w-25"
+                        onChange={(e) => setSortOrder(e.target.value)}
+                        value={sortOrder}
+                    >
+                        <option value="asc">Sort by Due Date (Ascending)</option>
+                        <option value="desc">Sort by Due Date (Descending)</option>
+                    </select>
                 </div>
-            </nav>
 
-            {/* Tasks Table */}
-            <div className="container">
-                <table className="table">
-                    <thead className="thead-dark">
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Title</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Due Date</th>
-                            <th scope="col">Actions</th>
-
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tasks.length > 0 ? (
-                            tasks.map((task) => (
-                                <tr key={task.id}>
-                                    <th scope="row">{task.id}</th>
-                                    <td>{task.title}</td>
-                                    <td>{task.description}</td>
-                                    <td>{task.status}</td>
-                                    <td>{task.due_date}</td>
-                                    <td>
-                                        <button className="btn btn-primary mx-2">Edit</button>
-                                        <button
-                                            className="btn btn-danger"
-                                            onClick={(e) => handleDelete(e, task.id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-
-                                </tr>
-                            ))
-                        ) : (
+                {isLoading ? (
+                    <p>Loading tasks...</p>
+                ) : (
+                    <table className="table table-striped">
+                        <thead>
                             <tr>
-                                <td colSpan="5" className="text-center">
-                                    No tasks found
-                                </td>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {sortedTasks.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4">No tasks found</td>
+                                </tr>
+                            ) : (
+                                sortedTasks.map((task, index) => (
+                                    <tr key={task.id}>
+                                        <td>{index + 1}</td>
+                                        <td>{task.title}</td>
+                                        <td>{task.description}</td>
+                                        <td>{task.status}</td>
+                                        <td>{new Date(task.dueDate).toLocaleDateString()}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </>
     );
 }
 
-export default Home;
+export default TaskList;

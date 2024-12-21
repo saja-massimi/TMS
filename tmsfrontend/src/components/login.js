@@ -33,7 +33,13 @@ function Login() {
             await validationSchema.validate(formData);
             setErrors({});
 
-            const response = await axiosInstance.post('/login', formData);
+            const response = await axiosInstance.post(
+                '/login',
+                formData,
+                {
+                    withCredentials: true,
+                }
+            );
 
             console.log(response);
 
@@ -82,10 +88,10 @@ function Login() {
                     </div>
 
                     <div data-mdb-input-init="" className="form-outline mb-4">
-                        <input type="email" id="email" className="form-control" 
-                        name='email'
-                        onChange={handleChange}
-                        value={formData.email}
+                        <input type="email" id="email" className="form-control"
+                            name='email'
+                            onChange={handleChange}
+                            value={formData.email}
                         />
                         <label className="form-label" htmlFor="email">
                             Email
@@ -93,12 +99,12 @@ function Login() {
                         {errors.email && <p className="text-danger small">{errors.email}</p>}
 
                     </div>
-             
+
                     <div data-mdb-input-init="" className="form-outline mb-4">
                         <input type="password" id="loginPassword" className="form-control"
-                        name='password'
-                        onChange={handleChange}
-                        value={formData.password}
+                            name='password'
+                            onChange={handleChange}
+                            value={formData.password}
                         />
                         <label className="form-label" htmlFor="loginPassword">
                             Password
