@@ -1,23 +1,36 @@
-import logo from './logo.svg';
+
 import './App.css';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from './pages/home';
+import Auth from './pages/auth';
+import NotFound from './pages/notFound';
+import UnAuthorized from './pages/unauthorized';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+      <Router>
+
+
+
+        <Routes>
+
+          <Route path="/" element={<Auth />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/unauthorized" element={<UnAuthorized />} />
+
+
+        </Routes>
+
+
+
+
+      </Router>
     </div>
   );
 }
